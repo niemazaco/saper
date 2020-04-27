@@ -96,7 +96,7 @@ def pole_klik(self,przyc): #klik na pole lub autom.odkrycie (bo sa zera)
         pass
     
     
-    
+#test
 
 def przegladnij sasiadow(m,n): # sprawdza ile bomb wkolo
     licznik = 0
