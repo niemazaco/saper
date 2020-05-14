@@ -1,0 +1,5 @@
+
+
+podział na pliki moduły
+podział na 2 klasy
+wyjątki klasy - walidacja danych przy starcie
