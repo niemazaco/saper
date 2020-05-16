@@ -20,25 +20,18 @@ JEST - podzial na pliki
 
 1/5 (wynagane 4)
 '''
+
+'''
+do zrobienia na pewno:
+    klik - sprawdzanie i wszystko dalej
+    aktualizacja pola
+    xyzzy
+    tworzenie tablicy przy wyg/przeg
+    obslugiwanie wyg/przeg
+'''
 import interfejs as gui
 import random
 
-
-class pole():
-    def __init__(self,wier,kol):
-        self.w = wier
-        self.k = kol
-        self._stan = 0 #(0- puste, 1- flaga, 2 - pytajnik, 3 - klikniete)
-        self._bomba = False
-        pass
-    
-    def bomba(self):
-        return self._bomba
-    
-    def ustaw_bombe(self):
-        self._bomba = True
-        
-        
 
 class plansza():
     def __init__(self,logika,wier,kol,bomb):
@@ -51,27 +44,31 @@ class plansza():
         self._flagzbomb = 0
         self._pytajniki = 0
             #self._uzytykod = False
-        #utworz pionki
-        self._lista = [[pole(i,j) for j in range(kol)] for i in range(wier)]
-        self.losujbomby()
-        #interfejs - utworz przyciski i zwroc klikacze
-   
-    def losujbomby(self):
+          
+        #utworz pionki [wiersz][kolumna][nr stanu,czy jest bomba]
+        #(0- puste, 1- flaga, 2 - pytajnik, 3 - klikniete)
+        #(4 - bomba, 5 - zla flaga, xyzzy = stan+6)
+        self._pola = [[[0,False] for j in range(kol)] for i in range(wier)]
+        
+        #losowanie pol
         licznik = self._ilebomb
         while 1:
             x = random.randint(0, self._w-1)
             y = random.randint(0, self._k-1)
-            if self._lista[x][y].bomba() == False:
-                self._lista[x][y].ustaw_bombe()
+            if self._pola[x][y][1] == False:
+                self._pola[x][y][1] = True
                 licznik -= 1
                 if licznik == 0:
                     break    
-       
+    
+    def wyslijplansze(self):
+        pass
+        
     #sprawdza pole po kliknieciu
-    def sprawdz(self,w,k):
+    def sprawdz(self,w,k,zwroc=False):
         
         #uzupelnic
-        
+        print(w,k)
         pass
 
 
@@ -104,8 +101,23 @@ class logika():
         if self._aktualizacja == True:
             return
         self._aktualizacja = True
-        self.sprawdz(w,k)        
+        self._plansza.sprawdz(w,k, zwroc=True)
+        #wygrana
+        #zmienic przycisku stan 0 lub 0+xyzzy na odpowiadajace im pola(zwykle lub xyzzy)
+        
+        #przegrana
+        #wyswietlic zawartosc wszystkich pol(przegrana + pokazac stan 2 + xyzzy
+        #+ zle postawione flagi + klikniete pole z bomba)
         self._aktualizacja = False
+        pass
+    
+    #kazdy pojedyncze pole do pokazania - wywolac gui i aktualizacja obrazka przycisku
+    
+    #pokazywanie wszystkich pol na koniec
+    def wygrana(self):
+        pass
+    
+    def przegrana(self):
         pass
     
 if __name__ == "__main__":
