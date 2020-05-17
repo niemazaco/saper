@@ -18,6 +18,15 @@ class interfejs():
         self._window.title("Saper Jakub Medalion")
         self._window.geometry("570x400")
         
+        #bindowanie klawiszy do kody xyzzy:
+        self._window.bind("x", lambda e:self.xyzzy('x'))
+        self._window.bind("y", lambda e:self.xyzzy('y'))
+        self._window.bind("z", lambda e:self.xyzzy('z'))
+        self._window.bind("X", lambda e:self.xyzzy('x'))
+        self._window.bind("Y", lambda e:self.xyzzy('y'))
+        self._window.bind("X", lambda e:self.xyzzy('z'))
+        self._kodwpisany = 0
+        
         #tla przyciskow
         #(0- puste, 1- flaga, 2 - pytajnik, 3 - klikniete)
         self._i0 = PhotoImage(file="pusty.png")
@@ -33,7 +42,9 @@ class interfejs():
         #xyzzy3 == _i3
         self._xyzzybomba = PhotoImage(file="xyzzybomba.png")
         #xyzzy wybuch - nie wystapi
-        
+        self._listatel = [self._i0,self._i1,self._i2,self._ibomb,
+                          self._i3,self._flagazla,self._iwybuch,
+                          self._xyzzy0,self._xyzzy1,self._xyzzy2,self._xyzzybomba]
         # utworzenie glownych kontenerow
         self._panellewy = Frame(self._window, bg='red', width=160, height=400, padx=3, pady=3)
         self._panelprawy = Frame(self._window, bg='blue', width=400, height=400, padx=3, pady=3)
@@ -125,7 +136,7 @@ class interfejs():
         for widget in self._panelprawy.winfo_children():
             widget.destroy()
         
-        
+    
         #tworzy plansze
         '''if self._plansza:
             print(self._plansza[0][0])
@@ -140,19 +151,41 @@ class interfejs():
     
         
         self._plansza = [[ Button(self._panelprawy, image=self._i0,
-                                  command=lambda i=i,j=j: self._logika.klik(i,j),
-                                  borderwidth=1, width=26, height=26)
+                                  command=lambda i=i,j=j: self._logika.klik(i,j,False),
+                                  borderwidth=1, width=26, height=26, compound="center")
                           for j in range(k)] for i in range(w)]
         #metoda Button.grid zwraca none (dokumentacja) - musialem rozdzielic
         for i in range(w):
             for j in range(k):
                 #self._plansza[i][j].grid(row=i,column=j, sticky='news')
                 self._plansza[i][j].place(x=26*i, y=26*j)
+                #self._plansza[i][j].geometry('26x26')
+                self._plansza[i][j].bind('<Button-3>',lambda e,i=i,j=j: self._logika.klik(i,j,True))
         #print(self._plansza)
     # print(pb.pole_klik(i,j))
     
     
-    '''
+    
+    def ustawpole(self,w,k,cyfra,stan):
+        if stan<4 and self._xyzzy:
+            l = stan + 7
+        else: l = stan
+        if l==4:
+            self._plansza[w][k].configure(text=cyfra, state=DISABLED, width=23, height=23)
+            self._plansza[w][k].unbind('<Button-3>')
+        self._plansza[w][k].configure(image=self._listatel[l])
+'''        
+    def xyzzy(self,klawisz):
+        if klawisz == "xyzzy"[self._kodwpisany]:
+            self._kodwpisany += 1
+            if self._kodwpisany == 5:
+                #self._xyzzy = True
+                if self._logika.prosbaOKod():
+                    self._xyzzy = True
+                #wywolac prosbe o pozycje pol z minami do przyciemnienia
+        
+'''   
+'''
     def sprawdz(self,w,k):
         self._plansza[w][k].invoke()
         
