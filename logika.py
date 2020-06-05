@@ -26,7 +26,6 @@ JEST - podzial na pliki
 
 '''
 do zrobienia na pewno:
-    klik - sprawdzanie i wszystko dalej
     xyzzy
     tworzenie tablicy przy wyg/przeg
     obslugiwanie wyg/przeg
@@ -52,8 +51,8 @@ class plansza():
         self._uzytykod = False
           
         #utworz pionki [wiersz][kolumna][nr stanu,czy jest bomba]
-        #(0- puste, 1- flaga, 2 - pytajnik, 3 - bomba) -
-        #(4 - klikniete, 5 - zla flaga, 6 - wybuch, xyzzy = stan+7) - tylko bez xyzzy
+        #(0- puste, 1- flaga, 2 - pytajnik, 3 - bomba) - po xyzzy stan+=7
+        #(4 - klikniete, 5 - zla flaga, 6 - wybuch) - tylko bez xyzzy
         # w sumie 7+4 stanow
         #
         self._pola = [[[0,False] for j in range(kol)] for i in range(wier)]
@@ -76,36 +75,153 @@ class plansza():
         #zrobic list comprehension selekcja pol z kodami 0,1,2,3,5,6 + sprawdzic czy xyzzy
         pass
         
-    #sprawdza pole po kliknieciu
-    def pole_klik(self,w,k):
-        
-        if self._pola[w][k][0] != 4:            
-            self._gui.ustawpole(w, k, str(1), 4)
-            self._pola[w][k][0] = 4
-            self.przeklikajsasiadow(w, k)
-        #uzupelnic
-        print(w,k)
-        pass
+    #sprawdza pole po kliknieciu LPM
+    def poleLPM(self,w,k,nieklikajflagi=False):
+        #pole w pozycji startowej
+        if self._pola[w][k][0] % 7 == 0:
+                if self._pola[w][k][1] == True: #bomba
+                    print('przegrana')
+                else: 
+                    self._pola[w][k][0] = 4 #ustawianie stanu
+                    ile = str(self.przegladnijsasiadow(w,k))
+                    #uaktualnianie przycisku
+                    if ile == '0':
+                        ile = ''
+                    
+                    if ile == '':
+                        self.przeklikajsasiadow(w,k)
+                    self._wolnepola -= 1
+                    self._gui.ustawpole(w, k, ile, self._pola[w][k][0],
+                                    self._ilebomb - self._ileflag, self._pytajniki,
+                                    self._wolnepola)
+                    if self._wolnepola == 0 == self._pytajniki:
+                        print('wygrana')
 
-    def przeklikajsasiadow(self,m,n):  #lmb na pole 0 bomb - przeklikaj wszystkie wkolo
+          
+        #pole z flaga
+        elif self._pola[w][k][0] % 7 == 1:
+            #przyc lewy zablokowany
+            pass
+           
+                
+        #pole z pytajnikiem
+        elif self._pola[w][k][0] % 7 == 2:
+            #przy automatycznym odkrywaniu nie sprawdza flagi
+            if nieklikajflagi == False: 
+                self._pytajniki -= 1
+                if self._pola[w][k][1] == True: #bomba
+                    print('przegrana')
+                else:
+                    self._pola[w][k][0] = 4
+                    ile = str(self.przegladnijsasiadow(w,k))
+                    #uaktualnianie przycisku
+                    if ile == '0':
+                        ile = ''
+                    if ile == '':
+                        self.przeklikajsasiadow(w,k)
+                    self._wolnepola -= 1
+                    self._gui.ustawpole(w, k, ile, self._pola[w][k][0],
+                                    self._ilebomb - self._ileflag, self._pytajniki,
+                                    self._wolnepola)
+                    if self._wolnepola == 0 == self._pytajniki:
+                        print('wygrana')
+
+
+    #sprawdza pole po kliknieciu PPM
+    def polePPM(self,w,k):
+        #pole w pozycji startowej
+        if self._pola[w][k][0] % 7 == 0:
+                self._pola[w][k][0] = 1 + 7*self._uzytykod #ustaw stan
+                self._ileflag += 1
+                if self._pola[w][k][1] == True:
+                    self._flagzbomb += 1
+                self._gui.ustawpole(w, k, "", self._pola[w][k][0],
+                                    self._ilebomb - self._ileflag, self._pytajniki,
+                                    self._wolnepola)
+                if self._ilebomb == self._flagzbomb == self._ileflag and 0 == self._pytajniki:
+                    print('wygrana')
+
+          
+        #pole z flaga
+        elif self._pola[w][k][0] % 7 == 1:
+                self._pola[w][k][0] = 2 + 7*self._uzytykod
+                self._pytajniki += 1
+                self._ileflag -= 1
+                if self._pola[w][k][1] == True:
+                    self._flagzbomb -= 1
+                self._gui.ustawpole(w, k, "", self._pola[w][k][0],
+                                    self._ilebomb - self._ileflag, self._pytajniki,
+                                    self._wolnepola)
+                
+                
+        #pole z pytajnikiem
+        elif self._pola[w][k][0] % 7 == 2:
+                self._pytajniki -= 1
+                self._pola[w][k][0] = 0+ 7*self._uzytykod
+                self._gui.ustawpole(w, k, "", self._pola[w][k][0],
+                                    self._ilebomb - self._ileflag, self._pytajniki,
+                                    self._wolnepola)
+                
+                #wszystkie bomby wczesniej poprawnie oflagowane, brak zbednych flag, znika ostatni pytajnik
+                if self._ilebomb == self._flagzbomb == self._ileflag and 0 == self._pytajniki:
+                    print('wygrana')
+                    
+                #wszystkie bez min byly klikniete LPM, ale byly rowniez pytajniki
+                if self._wolnepola == 0 == self._pytajniki:
+                    print('wygrana')
+
+
+
+
+    def przegladnijsasiadow(self,m,n): # zlicza ile bomb wkolo
+        licznik = 0
         if m>0:
             if n>0:
-                self.pole_klik(m-1,n-1)
-            self.pole_klik(m-1,n)
+                if self._pola[m-1][n-1][1] == True:
+                    licznik += 1
+            if self._pola[m-1][n][1] == True:
+                licznik += 1
             if n<self._k-1:
-                self.pole_klik(m-1,n+1)
+                if self._pola[m-1][n+1][1] == True:
+                    licznik += 1
             
         if n>0:
-            self.pole_klik(m,n-1)
+            if self._pola[m][n-1][1] == True:
+                    licznik += 1
         if n<self._k-1:
-            self.pole_klik(m,n+1)
+            if self._pola[m][n+1][1] == True:
+                    licznik += 1
     
         if m<self._w-1:
             if n>0:
-                self.pole_klik(m+1,n-1)
-            self.pole_klik(m+1,n)
+                if self._pola[m+1][n-1][1] == True:
+                    licznik += 1
+            if self._pola[m+1][n][1] == True:
+                licznik += 1
             if n<self._k-1:
-                self.pole_klik(m+1,n+1)
+                if self._pola[m+1][n+1][1] == True:
+                    licznik += 1
+        return licznik
+
+    def przeklikajsasiadow(self,m,n):  #LPM na pole 0 bomb - przeklikaj wszystkie wkolo
+        if m>0:
+            if n>0:
+                self.poleLPM(m-1,n-1,nieklikajflagi=True)
+            self.poleLPM(m-1,n,nieklikajflagi=True)
+            if n<self._k-1:
+                self.poleLPM(m-1,n+1,nieklikajflagi=True)
+            
+        if n>0:
+            self.poleLPM(m,n-1,nieklikajflagi=True)
+        if n<self._k-1:
+            self.poleLPM(m,n+1,nieklikajflagi=True)
+    
+        if m<self._w-1:
+            if n>0:
+                self.poleLPM(m+1,n-1,nieklikajflagi=True)
+            self.poleLPM(m+1,n,nieklikajflagi=True)
+            if n<self._k-1:
+                self.poleLPM(m+1,n+1,nieklikajflagi=True)
 
 
 
@@ -137,7 +253,10 @@ class logika():
         if self._aktualizacja == True:
             return
         self._aktualizacja = True
-        self._plansza.pole_klik(w,k)
+        if PPM == False:
+            self._plansza.poleLPM(w,k)
+        else:
+            self._plansza.polePPM(w,k)
         #wygrana
         #zmienic przycisku stan 0 lub 0+xyzzy na odpowiadajace im pola(zwykle lub xyzzy)
         
@@ -165,7 +284,7 @@ if __name__ == "__main__":
     
     
     def xyzzy(self):
-        if self._aktualizacja == False:
+        if self._aktualizacja == True:
             return False
         self._aktualizacja = True
         #wybierz pionki z bombami + ich stan
@@ -194,3 +313,6 @@ def wczytywanie():
 
 
 '''
+
+
+# eeee

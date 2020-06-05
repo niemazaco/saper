@@ -103,9 +103,9 @@ class interfejs():
         self._window.mainloop()
         
     #aktualizacja labeli na lewym panelu
-    def ustawinfo(self,bomby,flagi,pyt,ilewolnych):
+    def ustawinfo(self,flagi,pyt,ilewolnych):
             #print(bomby,flagi,pyt,ilewolnych)
-        self._lflag.configure(text='pozostalo bomb: {}'.format(bomby-flagi))
+        self._lflag.configure(text='pozostalo bomb: {}'.format(flagi))
         self._lpyt.configure(text='ilosc pytajnikow: {}'.format(pyt))
         self._lwolne.configure(text='wolne pola: {}'.format(ilewolnych))
             #self._panellewy.update_idletasks()
@@ -130,8 +130,8 @@ class interfejs():
     
     def ustawplansze(self,w,k,b):
         #lewy panel
-        self.ustawinfo(b, 0, 0, w*k-b)
-        #czysci plansze
+        self.ustawinfo(b-0, 0, w*k-b)
+        #czysci plansze z poprzedniej gry
         self._xyzzy = False
         for widget in self._panelprawy.winfo_children():
             widget.destroy()
@@ -160,20 +160,22 @@ class interfejs():
                 #self._plansza[i][j].grid(row=i,column=j, sticky='news')
                 self._plansza[i][j].place(x=26*i, y=26*j)
                 #self._plansza[i][j].geometry('26x26')
+                #akcja na PPM
                 self._plansza[i][j].bind('<Button-3>',lambda e,i=i,j=j: self._logika.klik(i,j,True))
         #print(self._plansza)
     # print(pb.pole_klik(i,j))
     
     
     
-    def ustawpole(self,w,k,cyfra,stan):
-        if stan<4 and self._xyzzy:
-            l = stan + 7
-        else: l = stan
-        if l==4:
+    def ustawpole(self,w,k,cyfra,stan,ileflag,pyt,ilewolnych):
+        #if stan<4 and self._xyzzy:
+        #    l = stan + 7
+        #else: l = stan
+        self.ustawinfo(ileflag,pyt,ilewolnych)
+        if stan==4:
             self._plansza[w][k].configure(text=cyfra, state=DISABLED, width=23, height=23)
             self._plansza[w][k].unbind('<Button-3>')
-        self._plansza[w][k].configure(image=self._listatel[l])
+        self._plansza[w][k].configure(image=self._listatel[stan], width=23, height=23)
 '''        
     def xyzzy(self,klawisz):
         if klawisz == "xyzzy"[self._kodwpisany]:
@@ -189,7 +191,6 @@ class interfejs():
     def sprawdz(self,w,k):
         self._plansza[w][k].invoke()
         
-    #lambda z wciskaniem przyciskow dla logiki?
     
     def wygrana(self,plansza):
         pass
