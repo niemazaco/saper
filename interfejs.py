@@ -1,13 +1,46 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Wed May 13 20:38:11 2020
-
-@author: Kuba
-"""
-
-
-
 from tkinter import *
+
+class BladDanychException(Exception):
+    def __init__(self, ktorepole, wartosc):
+        self._pole = ktorepole
+        self._trescbledu = wartosc
+        
+    def wypisz1(self):
+        return "Blad w inpucie {}".format(self._pole)
+    def wypisz2(self):
+        return "O co chodzi? {}".format(self._trescbledu)
+        
+class BladSzerokosciException(BladDanychException):
+    def __init__(self, wartosc):
+        if wartosc < 2:
+            super().__init__("Szerokosc planszy","Za mala szerokosc. Musi sie zawierac pomiedzy 2 a 15!")
+        else:
+            super().__init__("Szerokosc planszy","Za duza szerokosc. Musi sie zawierac pomiedzy 2 a 15!")
+            
+class BladWysokosciException(BladDanychException):
+    def __init__(self, wartosc):
+        if wartosc < 2:
+            super().__init__("Wysokosc planszy","Za mala wysokosc. Musi sie zawierac pomiedzy 2 a 15!")
+        else:
+            super().__init__("Wysokosc planszy","Za duza wysokosc. Musi sie zawierac pomiedzy 2 a 15!")
+            
+class BladBombException(BladDanychException):
+    def __init__(self, wysokosc, szerokosc, bomby):
+        if wysokosc * szerokosc < bomby:
+            super().__init__("Ilosc bomb",
+                  "Za duzo bomb, nie zmieszcza sie na planszy! Wpisz pomiedzy 1 a {}!".
+                  format(wysokosc*szerokosc-1))
+        elif wysokosc * szerokosc == bomby:
+            super().__init__("Ilosc bomb",
+                  "Co ty, chcesz grac bez wolnych pol? Wpisz pomiedzy 1 a {}!".
+                  format(wysokosc*szerokosc-1))
+        elif bomby < 0:
+            super().__init__("Ilosc bomb",
+                  "Wpisz dodatnia ilosc bomb!")
+        else:
+            super().__init__("Ilosc bomb",
+                  "Co ty, chcesz grac bez bomb? Wpisz dodatnia ilosc bomb!")
+        
 
 
 
@@ -46,8 +79,8 @@ class interfejs():
                           self._i3,self._flagazla,self._iwybuch,
                           self._xyzzy0,self._xyzzy1,self._xyzzy2,self._xyzzybomba]
         # utworzenie glownych kontenerow
-        self._panellewy = Frame(self._window, bg='red', width=160, height=400, padx=3, pady=3)
-        self._panelprawy = Frame(self._window, bg='blue', width=400, height=400, padx=3, pady=3)
+        self._panellewy = Frame(self._window, bg='blue', width=160, height=400, padx=3, pady=3)
+        self._panelprawy = Frame(self._window, bg='gold', width=400, height=400, padx=3, pady=3)
         
         # rozstawienie glownych kontenerow
         self._window.grid_rowconfigure(1, weight=1)
@@ -75,10 +108,10 @@ class interfejs():
 
         # print(pb.pole_klik(w,k)
         
-            #self._lczas = Label(self._panellewy, text='czas [s]: ')
         self._lflag = Label(self._panellewy, text='pozostalo bomb:')
         self._lpyt = Label(self._panellewy, text='ilosc pytajnikow:')
         self._lwolne = Label(self._panellewy, text='wolne pola:')
+        self._lstatus = Label(self._panellewy, text='WPISUJ I ZACZYNAJ :-)')
         
         
         # ukladanie elementow w lewym panelu
@@ -90,10 +123,10 @@ class interfejs():
         self._lbomb.grid(row=4, padx=3, pady=3)
         self._inbomb.grid(row=5, padx=3, pady=3)
         self._bstart.grid(row=6, padx=3, pady=3, rowspan=2)
-            #self._lczas.grid(row=8, padx=3, pady=3)
         self._lflag.grid(row=9, padx=3, pady=3)
         self._lpyt.grid(row=10, padx=3, pady=3)
         self._lwolne.grid(row=11, padx=3, pady=3)
+        self._lstatus.grid(row=12, padx=3, pady=3)
         #panel prawy
         '''for x in range(15): 
             self._panelprawy.columnconfigure(x, weight=1)
@@ -111,22 +144,31 @@ class interfejs():
             #self._panellewy.update_idletasks()
         
     def wczytaj(self,w,k,b):
-        
-        #zrobic wyjatki
-        w = int(float(w))
-        k = int(float(k))
-        b = int(float(b))
-        #sprawdzac dane wejsciowe
-        #wyjatki
-        #jesli zle - wyswietlic okienko dialogowe / wyjatki
-        #a jesli dobrze to wykonac self._logika.utworzplansze
-        if int(float(self._inszer.get())) == 0:
+        try:
+            w = int(float(w))
+            k = int(float(k))
+            b = int(float(b))
+        except Exception:
+            messagebox.showinfo(title='Blad!', message="zly format danych")
             return
-        
-        self._logika.utworzplansze(w,k,b)
-        #self.ustawplansze(w, k, b)
-        
-        
+        try:
+            if w < 2:
+                raise BladWysokosciException(w)  
+            elif w > 15:
+                raise BladWysokosciException(w)   
+            elif k < 2:
+                raise BladSzerokosciException(k)  
+            elif k > 15:
+                raise BladSzerokosciException(k)    
+            elif b <= 0:
+                raise BladBombException(w,k,b)  
+            elif b >= w*k:
+                raise BladBombException(w,k,b)  
+        except BladDanychException as e:            
+            messagebox.showinfo(title=e.wypisz1(), message=e.wypisz2())
+            return
+        else:
+            self._logika.utworzplansze(w,k,b)
     
     def ustawplansze(self,w,k,b):
         #lewy panel
@@ -162,50 +204,40 @@ class interfejs():
                 #self._plansza[i][j].geometry('26x26')
                 #akcja na PPM
                 self._plansza[i][j].bind('<Button-3>',lambda e,i=i,j=j: self._logika.klik(i,j,True))
+        
+        self._lstatus.configure(text='graj, graj')
         #print(self._plansza)
     # print(pb.pole_klik(i,j))
     
     
     
     def ustawpole(self,w,k,cyfra,stan,ileflag,pyt,ilewolnych):
-        #if stan<4 and self._xyzzy:
-        #    l = stan + 7
-        #else: l = stan
         self.ustawinfo(ileflag,pyt,ilewolnych)
-        if stan==4:
+        if stan in [3,4,5,6,10]: #inne LPM - blokujace nastepne kliki
             self._plansza[w][k].configure(text=cyfra, state=DISABLED, width=23, height=23)
             self._plansza[w][k].unbind('<Button-3>')
         self._plansza[w][k].configure(image=self._listatel[stan], width=23, height=23)
-'''        
+        
     def xyzzy(self,klawisz):
-        if klawisz == "xyzzy"[self._kodwpisany]:
+        if self._xyzzy == False and klawisz == "xyzzy"[self._kodwpisany]:
             self._kodwpisany += 1
             if self._kodwpisany == 5:
-                #self._xyzzy = True
-                if self._logika.prosbaOKod():
-                    self._xyzzy = True
-                #wywolac prosbe o pozycje pol z minami do przyciemnienia
+                self._kodwpisany = 0
+                self._logika.prosbaOKod()
+                self._xyzzy = True
         
-'''   
-'''
-    def sprawdz(self,w,k):
-        self._plansza[w][k].invoke()
+    def wygrana(self):
+        self._lstatus.configure(text='WYGRANA :-)')
+        messagebox.showinfo(title='WYGRANA', message='WYGRANA! :-) Dawaj jeszce raz')
         
+    def przegrana(self):
+        self._lstatus.configure(text='PRZEGRANA :-(')
+        messagebox.showinfo(title='PRZEGRANA', message='PRZEGRANA :-( Dawaj jeszce raz')
+
     
-    def wygrana(self,plansza):
-        pass
-    
-    def przegrana(self,plansza):
-        pass
-    
-    #przyjmuje gotowa liste pktow do wyszarzenia
-    def xyzzy(self,lista):
-        self._xyzzy = False
-        for i in lista:
-            #odswiez tlo
-            pass
-    '''   
+
+
 if __name__ == "__main__":
     from logika import *
-    start = logika()
+    start = Logika()
     
